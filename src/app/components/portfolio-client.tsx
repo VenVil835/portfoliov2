@@ -92,7 +92,7 @@ function SkillCategoryCard({ category, skillList, idx }: { category: string; ski
                     <div key={i}>
                         <div className="flex justify-between mb-2">
                             <span className="text-sm font-medium">{skill.name}</span>
-                            <span className="text-sm text-gray-400">{skill.level}%</span>
+                            <span className="text-sm text-white">{skill.level}%</span>
                         </div>
                         <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                             <div
@@ -131,6 +131,9 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showAllProjects, setShowAllProjects] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [showImageViewer, setShowImageViewer] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     // Scroll animations
     const heroAnimation = useScrollAnimation({ threshold: 0.2 });
@@ -287,7 +290,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                             <button
                                 key={section}
                                 onClick={() => scrollToSection(section)}
-                                className={`capitalize transition-all duration-200 hover:scale-105 ${activeSection === section
+                                className={`cursor-pointer capitalize transition-all duration-200 hover:scale-105 ${activeSection === section
                                     ? 'text-indigo-400 font-semibold'
                                     : 'text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-white dark:hover:text-white light:hover:text-gray-900'
                                     }`}
@@ -351,13 +354,13 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                 }`} style={{ animationDelay: '0.8s' }}>
                                 <button
                                     onClick={() => scrollToSection('projects')}
-                                    className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-semibold transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25 text-white dark:text-white light:text-white"
+                                    className="cursor-pointer px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-semibold transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25 text-white dark:text-white light:text-white"
                                 >
                                     View Projects
                                 </button>
                                 <button
                                     onClick={() => scrollToSection('contact')}
-                                    className="px-8 py-3 border border-indigo-400 hover:bg-indigo-400/10 rounded-lg font-semibold transition-all hover:border-indigo-300"
+                                    className="cursor-pointer px-8 py-3 border border-indigo-400 hover:bg-indigo-400/10 rounded-lg font-semibold transition-all hover:border-indigo-300"
                                 >
                                     Get in Touch
                                 </button>
@@ -601,7 +604,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
 
                         {/* Project image (if no video) */}
                         {!selectedProject.videoUrl && selectedProject.image && (
-                            <div className="relative aspect-video bg-slate-900">
+                            <div className="relative aspect-video bg-slate-900 group">
                                 <Image
                                     src={selectedProject.image}
                                     alt={selectedProject.title}
@@ -609,6 +612,21 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                     className="object-cover"
                                     unoptimized={selectedProject.image.endsWith('.gif')}
                                 />
+
+                                {/* View Full Image Button */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedImage(selectedProject.image!);
+                                        setShowImageViewer(true);
+                                    }}
+                                    className="absolute bottom-4 right-4 p-3 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-sm rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110"
+                                    aria-label="View full image"
+                                >
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                    </svg>
+                                </button>
                             </div>
                         )}
 
@@ -639,98 +657,225 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
             )}
 
             {/* View All Projects Modal */}
-            {showAllProjects && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+            {showAllProjects && (() => {
+                const itemsPerPage = 4;
+                const totalPages = Math.ceil(projects.length / itemsPerPage);
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const currentProjects = projects.slice(startIndex, endIndex);
+
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+                        {/* Backdrop */}
+                        <div
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            onClick={() => {
+                                setShowAllProjects(false);
+                                setCurrentPage(1);
+                            }}
+                        />
+
+                        {/* Modal content */}
+                        <div className="relative bg-slate-900 dark:bg-slate-900 light:bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] flex flex-col border border-slate-700 dark:border-slate-700 light:border-gray-300 shadow-2xl animate-scale-in">
+                            {/* Header */}
+                            <div className="flex-shrink-0 bg-slate-900 dark:bg-slate-900 light:bg-white border-b border-slate-700 dark:border-slate-700 light:border-gray-300 px-6 py-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                                        All Projects <span className="text-sm text-gray-400">({projects.length} total)</span>
+                                    </h2>
+                                    <button
+                                        onClick={() => {
+                                            setShowAllProjects(false);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="p-2 bg-slate-800/90 dark:bg-slate-800/90 light:bg-gray-200/90 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-gray-300 rounded-full transition-colors"
+                                        aria-label="Close modal"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Projects Grid - Scrollable */}
+                            <div className="flex-1 overflow-y-auto p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {currentProjects.map((project) => (
+                                        <article
+                                            key={project.id}
+                                            onClick={() => {
+                                                // Always open project modal to show details with expand icon
+                                                setShowAllProjects(false);
+                                                openProjectModal(project);
+                                            }}
+                                            className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
+                                        >
+                                            <div className="relative bg-slate-800 dark:bg-slate-800 light:bg-white rounded-xl overflow-hidden border border-slate-700 dark:border-slate-700 light:border-gray-200 hover:border-indigo-500 transition-colors">
+                                                {/* Image Container */}
+                                                <div className="aspect-video relative overflow-hidden bg-slate-700">
+                                                    {project.image ? (
+                                                        <Image
+                                                            src={project.image}
+                                                            alt={project.title}
+                                                            fill
+                                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            unoptimized={project.image.endsWith('.gif')}
+                                                        />
+                                                    ) : (
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 opacity-50" />
+                                                    )}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+                                                    {!project.image && (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            {project.category === 'video' && <Video className="w-12 h-12 text-white opacity-50" />}
+                                                            {project.category === 'photo' && <Camera className="w-12 h-12 text-white opacity-50" />}
+                                                            {project.category === 'web' && <Code className="w-12 h-12 text-white opacity-50" />}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="p-4">
+                                                    <span className="inline-block px-2 py-1 bg-indigo-600/20 text-indigo-400 rounded text-xs uppercase font-semibold mb-2">
+                                                        {project.category}
+                                                    </span>
+                                                    <h3 className="text-lg font-bold mb-2 group-hover:text-indigo-400 transition-colors line-clamp-1">
+                                                        {project.title}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 line-clamp-2 mb-3">
+                                                        {project.description}
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {project.tech.slice(0, 3).map((tech, i) => (
+                                                            <span key={i} className="px-2 py-0.5 bg-indigo-600/10 border border-indigo-600/20 rounded text-xs text-indigo-300">
+                                                                {tech}
+                                                            </span>
+                                                        ))}
+                                                        {project.tech.length > 3 && (
+                                                            <span className="px-2 py-0.5 text-xs text-gray-500">
+                                                                +{project.tech.length - 3}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex-shrink-0 border-t border-slate-700 dark:border-slate-700 light:border-gray-300 px-3 sm:px-6 py-3 sm:py-4 bg-slate-900 dark:bg-slate-900 light:bg-white">
+                                    <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2 sm:gap-0">
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            disabled={currentPage === 1}
+                                            className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                                        >
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                            <span className="hidden sm:inline">Previous</span>
+                                            <span className="sm:hidden">Prev</span>
+                                        </button>
+
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
+                                                        ? 'bg-indigo-600 text-white'
+                                                        : 'bg-slate-800 dark:bg-slate-800 light:bg-gray-200 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-300'
+                                                        }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                                        >
+                                            Next
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <p className="text-center text-xs sm:text-sm text-gray-400 mt-2 sm:mt-3">
+                                        Showing {startIndex + 1}-{Math.min(endIndex, projects.length)} of {projects.length}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
+
+
+            {/* Image Viewer Modal */}
+            {showImageViewer && selectedImage && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        onClick={() => setShowAllProjects(false)}
+                        className="absolute inset-0 bg-black/95 backdrop-blur-sm"
+                        onClick={() => {
+                            setShowImageViewer(false);
+                            setSelectedImage(null);
+                        }}
                     />
 
                     {/* Modal content */}
-                    <div className="relative bg-slate-900 dark:bg-slate-900 light:bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border border-slate-700 dark:border-slate-700 light:border-gray-300 shadow-2xl animate-scale-in">
-                        {/* Header */}
-                        <div className="sticky top-0 z-10 bg-slate-900 dark:bg-slate-900 light:bg-white border-b border-slate-700 dark:border-slate-700 light:border-gray-300 px-6 py-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                                    All Projects ({projects.length})
-                                </h2>
-                                <button
-                                    onClick={() => setShowAllProjects(false)}
-                                    className="p-2 bg-slate-800/90 dark:bg-slate-800/90 light:bg-gray-200/90 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-gray-300 rounded-full transition-colors"
-                                    aria-label="Close modal"
-                                >
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        {/* Close button */}
+                        <button
+                            onClick={() => {
+                                setShowImageViewer(false);
+                                setSelectedImage(null);
+                            }}
+                            className="absolute top-4 right-4 z-10 p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-colors group"
+                            aria-label="Close image viewer"
+                        >
+                            <X className="w-7 h-7 group-hover:rotate-90 transition-transform" />
+                        </button>
+
+                        {/* Download button */}
+                        <a
+                            href={selectedImage}
+                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute top-4 right-20 z-10 p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-colors group"
+                            aria-label="Download image"
+                        >
+                            <svg className="w-7 h-7 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </a>
+
+                        {/* Image */}
+                        <div className="relative max-w-7xl max-h-[90vh] animate-scale-in">
+                            <Image
+                                src={selectedImage}
+                                alt="Full size preview"
+                                width={1920}
+                                height={1080}
+                                className="object-contain max-h-[90vh] rounded-lg shadow-2xl"
+                                unoptimized={selectedImage.endsWith('.gif')}
+                            />
                         </div>
 
-                        {/* Projects Grid */}
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {projects.map((project) => (
-                                <article
-                                    key={project.id}
-                                    onClick={() => {
-                                        setShowAllProjects(false);
-                                        openProjectModal(project);
-                                    }}
-                                    className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
-                                >
-                                    <div className="relative bg-slate-800 dark:bg-slate-800 light:bg-white rounded-xl overflow-hidden border border-slate-700 dark:border-slate-700 light:border-gray-200 hover:border-indigo-500 transition-colors">
-                                        {/* Image Container */}
-                                        <div className="aspect-video relative overflow-hidden bg-slate-700">
-                                            {project.image ? (
-                                                <Image
-                                                    src={project.image}
-                                                    alt={project.title}
-                                                    fill
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                    unoptimized={project.image.endsWith('.gif')}
-                                                />
-                                            ) : (
-                                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 opacity-50" />
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
-                                            {!project.image && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    {project.category === 'video' && <Video className="w-12 h-12 text-white opacity-50" />}
-                                                    {project.category === 'photo' && <Camera className="w-12 h-12 text-white opacity-50" />}
-                                                    {project.category === 'web' && <Code className="w-12 h-12 text-white opacity-50" />}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Info */}
-                                        <div className="p-4">
-                                            <span className="inline-block px-2 py-1 bg-indigo-600/20 text-indigo-400 rounded text-xs uppercase font-semibold mb-2">
-                                                {project.category}
-                                            </span>
-                                            <h3 className="text-lg font-bold mb-2 group-hover:text-indigo-400 transition-colors line-clamp-1">
-                                                {project.title}
-                                            </h3>
-                                            <p className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 line-clamp-2 mb-3">
-                                                {project.description}
-                                            </p>
-                                            <div className="flex flex-wrap gap-1">
-                                                {project.tech.slice(0, 3).map((tech, i) => (
-                                                    <span key={i} className="px-2 py-0.5 bg-indigo-600/10 border border-indigo-600/20 rounded text-xs text-indigo-300">
-                                                        {tech}
-                                                    </span>
-                                                ))}
-                                                {project.tech.length > 3 && (
-                                                    <span className="px-2 py-0.5 text-xs text-gray-500">
-                                                        +{project.tech.length - 3}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
+                        {/* Instructions */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900/90 rounded-full text-sm text-gray-300">
+                            Click outside to close
                         </div>
                     </div>
                 </div>
             )}
+
 
 
             {/* Skills Section */}
@@ -784,7 +929,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                     <p className="text-sm mb-4 line-clamp-2">
                                         {repo.description || 'No description available'}
                                     </p>
-                                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    <div className="flex items-center gap-4 text-sm text-white">
                                         {repo.language && (
                                             <span className="flex items-center gap-1">
                                                 <span className="w-3 h-3 rounded-full bg-indigo-500" />
