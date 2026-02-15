@@ -92,6 +92,14 @@ const nextConfig: NextConfig = {
 
   // Powered by header removal for security
   poweredByHeader: false,
+
+  // Disable React DevTools in production
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Disable source maps in production for security
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;
