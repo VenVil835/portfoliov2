@@ -13,7 +13,7 @@ The authentication system now reads from `src/admin-credentials.json` on **every
 ### Method 1: Use the Helper Script (EASIEST)
 
 ```bash
-node update-credentials.js "admin" "newpassword123"
+node update-credentials.js "[username]" "[password]"
 ```
 
 This will:
@@ -27,7 +27,7 @@ This will:
 2. Update the `username` or `passwordHash`:
    ```json
    {
-     "username": "admin",
+     "username": "",
      "passwordHash": "$2b$10$..."
    }
    ```
@@ -44,8 +44,8 @@ Then paste the hash into `admin-credentials.json`.
 
 ## 🔑 Current Credentials
 
-- **Username:** `admin`
-- **Password:** `password`
+- **Username:** ``
+- **Password:** ``
 
 ## 🎉 That's It!
 
