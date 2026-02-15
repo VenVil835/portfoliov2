@@ -37,7 +37,14 @@ export default async function Page() {
 
     [hero, projects, skills] = await Promise.all([
       prisma.heroSection.findFirst(),
-      prisma.project.findMany({ orderBy: { sortOrder: 'asc' } }),
+      prisma.project.findMany({
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          images: {
+            orderBy: { sortOrder: 'asc' }
+          }
+        }
+      }),
       prisma.skill.findMany({ orderBy: { sortOrder: 'asc' } })
     ]);
   } catch (e) {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
@@ -58,32 +57,19 @@ export async function POST(request: NextRequest) {
         // Generate unique filename
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 10);
-        const ext = path.extname(file.name);
-        const filename = `${timestamp}-${random}${ext}`;
+        const ext = file.name.split('.').pop();
+        const filename = `${type}s/${timestamp}-${random}.${ext}`;
 
-        // Determine directory
-        const subDir = type === 'image' ? 'images' : 'videos';
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', subDir);
+        // Upload to Vercel Blob
+        const blob = await put(filename, file, {
+            access: 'public',
+            addRandomSuffix: false, // We already added our own suffix
+        });
 
-        // Ensure directory exists
-        try {
-            await mkdir(uploadDir, { recursive: true });
-        } catch (error) {
-            console.error('Error creating directory:', error);
-        }
-
-        // Save file
-        const filePath = path.join(uploadDir, filename);
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        await writeFile(filePath, buffer);
-
-        // Return public path
-        const publicPath = `/uploads/${subDir}/${filename}`;
-
+        // Return blob URL
         return NextResponse.json({
             success: true,
-            path: publicPath,
+            path: blob.url,
             filename: filename,
             size: file.size,
             type: file.type

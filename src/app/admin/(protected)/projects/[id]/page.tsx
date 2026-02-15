@@ -8,6 +8,11 @@ export default async function ProjectEditorPage({ params }: { params: Promise<{ 
 
     const project = isNew ? null : await prisma.project.findUnique({
         where: { id },
+        include: {
+            images: {
+                orderBy: { sortOrder: 'asc' }
+            }
+        }
     });
 
     if (!isNew && !project) {

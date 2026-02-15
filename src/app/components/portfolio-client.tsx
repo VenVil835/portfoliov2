@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import {
     Camera, Video, Code, Mail, Github, Linkedin, Menu, X,
     Play, Send, Loader2, CheckCircle, AlertCircle, Star,
-    GitFork, ExternalLink
+    GitFork, ExternalLink, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import Image from 'next/image';
 import { isYouTubeUrl, getYouTubeEmbedUrl } from '@/lib/youtube';
@@ -35,6 +35,7 @@ interface Project {
     tech: string[]; // parsed from JSON
     image?: string | null;
     videoUrl?: string | null;
+    images?: { id: string; imageUrl: string; sortOrder: number }[];
 }
 
 interface Skill {
@@ -116,6 +117,194 @@ function SkillsGrid({ skills }: { skills: { video: Skill[]; photo: Skill[]; web:
             {Object.entries(skills).map(([category, skillList], idx) => (
                 <SkillCategoryCard key={category} category={category} skillList={skillList} idx={idx} />
             ))}
+        </div>
+    );
+}
+
+// Mini gallery component for project cards
+function ProjectCardGallery({ project }: { project: Project }) {
+    // Prepare gallery images - combine main image + gallery images
+    const galleryImages: string[] = [];
+    if (project.image) galleryImages.push(project.image);
+    if (project.images) {
+        project.images.forEach(img => galleryImages.push(img.imageUrl));
+    }
+
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const hasMultipleImages = galleryImages.length > 1;
+
+    if (galleryImages.length === 0) {
+        // No images - show category icon
+        return (
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 opacity-50 group-hover:opacity-70 transition-opacity">
+                <div className="absolute inset-0 flex items-center justify-center">
+                    {project.category === 'video' && <Video className="w-16 h-16 text-white opacity-50" />}
+                    {project.category === 'photo' && <Camera className="w-16 h-16 text-white opacity-50" />}
+                    {project.category === 'web' && <Code className="w-16 h-16 text-white opacity-50" />}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <Image
+                src={galleryImages[currentImageIndex]}
+                alt={project.title}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                unoptimized={galleryImages[currentImageIndex].endsWith('.gif')}
+            />
+
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+
+            {/* Mini Gallery Navigation (only if multiple images) */}
+            {hasMultipleImages && (
+                <>
+                    {/* Left/Right arrows */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((prev) =>
+                                prev === 0 ? galleryImages.length - 1 : prev - 1
+                            );
+                        }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        aria-label="Previous image"
+                    >
+                        <ChevronLeft className="w-4 h-4 text-white" />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((prev) =>
+                                prev === galleryImages.length - 1 ? 0 : prev + 1
+                            );
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        aria-label="Next image"
+                    >
+                        <ChevronRight className="w-4 h-4 text-white" />
+                    </button>
+
+                    {/* Dot indicators */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {galleryImages.slice(0, 5).map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentImageIndex(idx);
+                                }}
+                                className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex
+                                    ? 'bg-white w-6'
+                                    : 'bg-white/50 hover:bg-white/75'
+                                    }`}
+                                aria-label={`Go to image ${idx + 1}`}
+                            />
+                        ))}
+                        {galleryImages.length > 5 && (
+                            <span className="text-white/75 text-xs ml-1">
+                                +{galleryImages.length - 5}
+                            </span>
+                        )}
+                    </div>
+                </>
+            )}
+        </>
+    );
+}
+
+// Full slideshow component for project modal
+function ProjectModalSlideshow({ project, onImageClick }: { project: Project; onImageClick: (imageUrl: string) => void }) {
+    // Prepare gallery images
+    const modalGalleryImages: string[] = [];
+    if (project.image) modalGalleryImages.push(project.image);
+    if (project.images) {
+        project.images.forEach(img => modalGalleryImages.push(img.imageUrl));
+    }
+
+    const [modalImageIndex, setModalImageIndex] = useState(0);
+
+    if (modalGalleryImages.length === 0) return null;
+
+    return (
+        <div className="relative aspect-video bg-slate-900 group">
+            {/* Main image */}
+            <Image
+                src={modalGalleryImages[modalImageIndex]}
+                alt={project.title}
+                fill
+                className="object-cover"
+                unoptimized={modalGalleryImages[modalImageIndex].endsWith('.gif')}
+            />
+
+            {/* Navigation arrows */}
+            {modalGalleryImages.length > 1 && (
+                <>
+                    <button
+                        onClick={() => setModalImageIndex((prev) =>
+                            prev === 0 ? modalGalleryImages.length - 1 : prev - 1
+                        )}
+                        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-all hover:scale-110"
+                        aria-label="Previous image"
+                    >
+                        <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                    </button>
+                    <button
+                        onClick={() => setModalImageIndex((prev) =>
+                            prev === modalGalleryImages.length - 1 ? 0 : prev + 1
+                        )}
+                        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-all hover:scale-110"
+                        aria-label="Next image"
+                    >
+                        <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                    </button>
+
+                    {/* Image counter */}
+                    <div className="absolute top-2 md:top-4 right-2 md:right-4 px-2 py-1 md:px-3 md:py-1.5 bg-slate-900/90 rounded-full text-xs md:text-sm font-medium">
+                        {modalImageIndex + 1} / {modalGalleryImages.length}
+                    </div>
+
+                    {/* Thumbnail strip - hidden on mobile, shown on desktop */}
+                    <div className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 gap-2 max-w-full px-4 overflow-x-auto scrollbar-hide">
+                        {modalGalleryImages.map((img, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setModalImageIndex(idx)}
+                                className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === modalImageIndex
+                                        ? 'border-indigo-500 scale-110'
+                                        : 'border-transparent hover:border-white/50'
+                                    }`}
+                                aria-label={`Go to image ${idx + 1}`}
+                            >
+                                <Image
+                                    src={img}
+                                    alt={`Thumbnail ${idx + 1}`}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized={img.endsWith('.gif')}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* View Full Image Button */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onImageClick(modalGalleryImages[modalImageIndex]);
+                }}
+                className="absolute bottom-2 md:bottom-4 right-2 md:right-4 p-2 md:p-3 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-sm rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110"
+                aria-label="View full image"
+            >
+                <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+            </button>
         </div>
     );
 }
@@ -489,26 +678,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                     <div className="text-white relative bg-slate-900 dark:bg-slate-900 light:bg-white rounded-2xl overflow-hidden border border-slate-800 dark:border-slate-800 light:border-gray-200 shadow-2xl group-hover:shadow-indigo-500/20 transition-all duration-500">
                                         {/* Image Container */}
                                         <div className="aspect-video relative overflow-hidden bg-slate-700">
-                                            {project.image ? (
-                                                <Image
-                                                    src={project.image}
-                                                    alt={project.title}
-                                                    fill
-                                                    className="text-white object-cover transition-transform duration-700 group-hover:scale-110"
-                                                    unoptimized={project.image.endsWith('.gif')}
-                                                />
-                                            ) : (
-                                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 opacity-50 group-hover:opacity-70 transition-opacity" />
-                                            )}
-                                            {/* Overlay gradient */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
-                                            {!project.image && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    {project.category === 'video' && <Video className="w-16 h-16 text-white opacity-50" />}
-                                                    {project.category === 'photo' && <Camera className="w-16 h-16 text-white opacity-50" />}
-                                                    {project.category === 'web' && <Code className="w-16 h-16 text-white opacity-50" />}
-                                                </div>
-                                            )}
+                                            <ProjectCardGallery project={project} />
                                         </div>
 
                                         <div className="p-6">
@@ -602,32 +772,15 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                             </div>
                         )}
 
-                        {/* Project image (if no video) */}
-                        {!selectedProject.videoUrl && selectedProject.image && (
-                            <div className="relative aspect-video bg-slate-900 group">
-                                <Image
-                                    src={selectedProject.image}
-                                    alt={selectedProject.title}
-                                    fill
-                                    className="object-cover"
-                                    unoptimized={selectedProject.image.endsWith('.gif')}
-                                />
-
-                                {/* View Full Image Button */}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedImage(selectedProject.image!);
-                                        setShowImageViewer(true);
-                                    }}
-                                    className="absolute bottom-4 right-4 p-3 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-sm rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110"
-                                    aria-label="View full image"
-                                >
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                    </svg>
-                                </button>
-                            </div>
+                        {/* Project image slideshow (if no video) */}
+                        {!selectedProject.videoUrl && (
+                            <ProjectModalSlideshow
+                                project={selectedProject}
+                                onImageClick={(imageUrl) => {
+                                    setSelectedImage(imageUrl);
+                                    setShowImageViewer(true);
+                                }}
+                            />
                         )}
 
                         {/* Project details */}
@@ -712,25 +865,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                             <div className="relative bg-slate-800 dark:bg-slate-800 light:bg-white rounded-xl overflow-hidden border border-slate-700 dark:border-slate-700 light:border-gray-200 hover:border-indigo-500 transition-colors">
                                                 {/* Image Container */}
                                                 <div className="aspect-video relative overflow-hidden bg-slate-700">
-                                                    {project.image ? (
-                                                        <Image
-                                                            src={project.image}
-                                                            alt={project.title}
-                                                            fill
-                                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                            unoptimized={project.image.endsWith('.gif')}
-                                                        />
-                                                    ) : (
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 opacity-50" />
-                                                    )}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
-                                                    {!project.image && (
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            {project.category === 'video' && <Video className="w-12 h-12 text-white opacity-50" />}
-                                                            {project.category === 'photo' && <Camera className="w-12 h-12 text-white opacity-50" />}
-                                                            {project.category === 'web' && <Code className="w-12 h-12 text-white opacity-50" />}
-                                                        </div>
-                                                    )}
+                                                    <ProjectCardGallery project={project} />
                                                 </div>
 
                                                 {/* Info */}

@@ -1,11 +1,17 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
-import { Save, ArrowLeft, Upload, X, Loader2, Image as ImageIcon, Video as VideoIcon } from 'lucide-react';
+import { Save, ArrowLeft, Upload, X, Loader2, Image as ImageIcon, Video as VideoIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { saveProject } from './actions';
 import { isYouTubeUrl, getYouTubeEmbedUrl } from '@/lib/youtube';
+
+interface GalleryImage {
+    id: string;
+    imageUrl: string;
+    sortOrder: number;
+}
 
 interface ProjectEditorPageProps {
     params: Promise<{ id: string }>;
@@ -17,6 +23,7 @@ interface ProjectEditorPageProps {
         image: string | null;
         videoUrl: string | null;
         tech: string;
+        images?: GalleryImage[];
     } | null;
     isNew: boolean;
 }
@@ -32,6 +39,11 @@ export default function ProjectEditorClient({ initialProject, isNew }: Omit<Proj
     const [videoError, setVideoError] = useState('');
     const [manualImageUrl, setManualImageUrl] = useState('');
     const [manualVideoUrl, setManualVideoUrl] = useState('');
+
+    // Gallery images state
+    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>(initialProject?.images || []);
+    const [uploadingGallery, setUploadingGallery] = useState(false);
+    const [galleryError, setGalleryError] = useState('');
 
     // Parse existing tech JSON for defaultValue
     let defaultTech = '';
@@ -145,6 +157,60 @@ export default function ProjectEditorClient({ initialProject, isNew }: Omit<Proj
         setVideoPreview('');
     };
 
+    // Gallery image handlers
+    const handleGalleryUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setGalleryError('');
+        setUploadingGallery(true);
+
+        try {
+            const uploadPromises = Array.from(files).map(async (file, index) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', 'image');
+
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    return {
+                        id: `temp-${Date.now()}-${index}`,
+                        imageUrl: data.path,
+                        sortOrder: galleryImages.length + index
+                    };
+                }
+                return null;
+            });
+
+            const uploadedImages = (await Promise.all(uploadPromises)).filter((img): img is GalleryImage => img !== null);
+            setGalleryImages(prev => [...prev, ...uploadedImages]);
+        } catch (error) {
+            console.error('Gallery upload error:', error);
+            setGalleryError('Failed to upload some images');
+        } finally {
+            setUploadingGallery(false);
+        }
+    };
+
+    const removeGalleryImage = (index: number) => {
+        setGalleryImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const moveGalleryImage = (fromIndex: number, toIndex: number) => {
+        setGalleryImages(prev => {
+            const newImages = [...prev];
+            const [moved] = newImages.splice(fromIndex, 1);
+            newImages.splice(toIndex, 0, moved);
+            // Update sort orders
+            return newImages.map((img, idx) => ({ ...img, sortOrder: idx }));
+        });
+    };
+
     return (
         <div className="max-w-3xl mx-auto">
             <div className="mb-8 flex items-center gap-4">
@@ -161,6 +227,8 @@ export default function ProjectEditorClient({ initialProject, isNew }: Omit<Proj
             </div>
 
             <form action={async (formData: FormData) => {
+                // Add gallery images as JSON
+                formData.append('galleryImages', JSON.stringify(galleryImages));
                 await saveProject(formData, isNew, initialProject?.id);
             }} className="space-y-6 bg-slate-900 p-8 rounded-2xl border border-slate-800">
 
@@ -291,6 +359,106 @@ export default function ProjectEditorClient({ initialProject, isNew }: Omit<Proj
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Gallery Images Section */}
+                    <div className="md:col-span-2 bg-slate-950 border border-slate-700 rounded-lg p-6">
+                        <label className="block text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+                            <ImageIcon size={18} className="text-green-400" />
+                            Gallery Images (Optional - for slideshow)
+                        </label>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg cursor-pointer transition-colors">
+                                    <Upload size={18} />
+                                    <span>{uploadingGallery ? 'Uploading...' : 'Add Gallery Images (Multiple)'}</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleGalleryUpload}
+                                        disabled={uploadingGallery}
+                                        className="hidden"
+                                    />
+                                </label>
+                                <p className="text-xs text-slate-500 mt-1">Select multiple images for the project gallery</p>
+                            </div>
+
+                            {uploadingGallery && (
+                                <div className="flex items-center gap-2 text-green-400">
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span className="text-sm">Uploading gallery images...</span>
+                                </div>
+                            )}
+
+                            {galleryError && (
+                                <div className="p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                                    {galleryError}
+                                </div>
+                            )}
+
+                            {galleryImages.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-slate-400">{galleryImages.length} image{galleryImages.length !== 1 ? 's' : ''} in gallery</p>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {galleryImages.map((img, index) => (
+                                            <div key={img.id} className="relative group">
+                                                <div className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden">
+                                                    <Image
+                                                        src={img.imageUrl}
+                                                        alt={`Gallery ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized={img.imageUrl.startsWith('blob:')}
+                                                    />
+                                                </div>
+
+                                                {/* Controls */}
+                                                <div className="absolute top-1 right-1 flex gap-1">
+                                                    {/* Move up */}
+                                                    {index > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveGalleryImage(index, index - 1)}
+                                                            className="p-1.5 bg-slate-900/90 hover:bg-slate-800 rounded transition-colors"
+                                                            title="Move left"
+                                                        >
+                                                            <ArrowUp size={14} className="rotate-[-90deg]" />
+                                                        </button>
+                                                    )}
+                                                    {/* Move down */}
+                                                    {index < galleryImages.length - 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveGalleryImage(index, index + 1)}
+                                                            className="p-1.5 bg-slate-900/90 hover:bg-slate-800 rounded transition-colors"
+                                                            title="Move right"
+                                                        >
+                                                            <ArrowDown size={14} className="rotate-[-90deg]" />
+                                                        </button>
+                                                    )}
+                                                    {/* Delete */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeGalleryImage(index)}
+                                                        className="p-1.5 bg-red-600/90 hover:bg-red-700 rounded transition-colors"
+                                                        title="Remove image"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+
+                                                {/* Order indicator */}
+                                                <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-slate-900/90 rounded text-xs font-medium">
+                                                    {index + 1}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

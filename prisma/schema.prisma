@@ -35,9 +35,25 @@ model Project {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  images      ProjectImage[]
 
   @@index([category])
   @@index([featured])
+}
+
+// Project gallery images
+model ProjectImage {
+  id        String   @id @default(cuid())
+  projectId String
+  imageUrl  String   @db.VarChar(500)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([projectId])
+  @@index([sortOrder])
 }
 
 // Dynamic Hero Section
