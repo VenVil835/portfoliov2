@@ -9,6 +9,18 @@ const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 export async function POST(request: NextRequest) {
     try {
+        // Check if Blob token is configured
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+            console.error('BLOB_READ_WRITE_TOKEN is not set in environment variables');
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Server configuration error: BLOB_READ_WRITE_TOKEN not set. Please add it to your .env.local file.'
+                },
+                { status: 500 }
+            );
+        }
+
         const formData = await request.formData();
         const file = formData.get('file') as File;
         const type = formData.get('type') as string; // 'image' or 'video'
