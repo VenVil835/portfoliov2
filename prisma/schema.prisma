@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Contact form submissions
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(100)
+  email     String   @db.VarChar(255)
+  message   String   @db.Text
+  ipHash    String?  @db.VarChar(64)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([ipHash])
+}
+
+// Portfolio projects
+model Project {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(200)
+  category    String   @db.VarChar(50)
+  description String   @db.Text
+  image       String?  @db.VarChar(500)
+  videoUrl    String?  @db.VarChar(500)
+  tech        String   @db.Text
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([featured])
+}
+
+// Dynamic Hero Section
+model HeroSection {
+  id          String   @id @default(cuid())
+  greeting    String   @default("Hi, nice to meet you,")
+  heading     String   @default("I'm Rovenado Villotes")
+  description String   @db.Text
+  heroImage   String?  @db.VarChar(500)
+  resumeUrl   String?
+  updatedAt   DateTime @updatedAt
+}
+
+// Dynamic Skills
+model Skill {
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  level     Int
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
