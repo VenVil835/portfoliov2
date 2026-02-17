@@ -1,9 +1,9 @@
 /**
- * Detects if a URL is a YouTube video URL
+ * Detects if a URL is a YouTube video URL (including Shorts)
  */
 export function isYouTubeUrl(url: string): boolean {
     if (!url) return false;
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     return youtubeRegex.test(url);
 }
 
@@ -15,6 +15,7 @@ export function isYouTubeUrl(url: string): boolean {
  * - https://youtube.com/watch?v=VIDEO_ID
  * - https://m.youtube.com/watch?v=VIDEO_ID
  * - https://www.youtube.com/embed/VIDEO_ID
+ * - https://www.youtube.com/shorts/VIDEO_ID (YouTube Shorts)
  */
 export function getYouTubeVideoId(url: string): string | null {
     if (!url) return null;
@@ -24,6 +25,7 @@ export function getYouTubeVideoId(url: string): string | null {
         /(?:youtu\.be\/)([^?\s]+)/,
         /(?:youtube\.com\/embed\/)([^?\s]+)/,
         /(?:youtube\.com\/v\/)([^?\s]+)/,
+        /(?:youtube\.com\/shorts\/)([^?\s]+)/, // YouTube Shorts support
     ];
 
     for (const pattern of regexPatterns) {

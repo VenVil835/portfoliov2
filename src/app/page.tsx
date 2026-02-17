@@ -38,6 +38,7 @@ export default async function Page() {
     [hero, projects, skills] = await Promise.all([
       prisma.heroSection.findFirst(),
       prisma.project.findMany({
+        where: { deletedAt: null },
         orderBy: { sortOrder: 'asc' },
         include: {
           images: {
@@ -45,7 +46,7 @@ export default async function Page() {
           }
         }
       }),
-      prisma.skill.findMany({ orderBy: { sortOrder: 'asc' } })
+      prisma.skill.findMany({ where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } })
     ]);
   } catch (e) {
     console.error("Database connection failed, using fallback data", e);
