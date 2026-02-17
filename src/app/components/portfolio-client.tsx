@@ -274,8 +274,8 @@ function ProjectModalSlideshow({ project, onImageClick }: { project: Project; on
                                 key={idx}
                                 onClick={() => setModalImageIndex(idx)}
                                 className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === modalImageIndex
-                                        ? 'border-indigo-500 scale-110'
-                                        : 'border-transparent hover:border-white/50'
+                                    ? 'border-indigo-500 scale-110'
+                                    : 'border-transparent hover:border-white/50'
                                     }`}
                                 aria-label={`Go to image ${idx + 1}`}
                             >
@@ -298,7 +298,7 @@ function ProjectModalSlideshow({ project, onImageClick }: { project: Project; on
                     e.stopPropagation();
                     onImageClick(modalGalleryImages[modalImageIndex]);
                 }}
-                className="absolute bottom-2 md:bottom-4 right-2 md:right-4 p-2 md:p-3 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-sm rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110"
+                className="absolute bottom-2 md:bottom-4 right-2 md:right-4 p-2 md:p-3 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-sm rounded-full transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:scale-110"
                 aria-label="View full image"
             >
                 <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,13 +323,15 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
     const [currentPage, setCurrentPage] = useState(1);
     const [showImageViewer, setShowImageViewer] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [sortOrder, setSortOrder] = useState<'recent' | 'default'>('default');
 
     // Scroll animations
-    const heroAnimation = useScrollAnimation({ threshold: 0.2 });
-    const projectsHeaderAnimation = useScrollAnimation({ threshold: 0.3 });
-    const skillsHeaderAnimation = useScrollAnimation({ threshold: 0.3 });
-    const githubHeaderAnimation = useScrollAnimation({ threshold: 0.3 });
-    const contactHeaderAnimation = useScrollAnimation({ threshold: 0.3 });
+    const { ref: heroRef, isVisible: isHeroVisible } = useScrollAnimation({ threshold: 0.2 });
+    const { ref: projectsHeaderRef, isVisible: isProjectsHeaderVisible } = useScrollAnimation({ threshold: 0.3 });
+    const { ref: skillsHeaderRef, isVisible: isSkillsHeaderVisible } = useScrollAnimation({ threshold: 0.3 });
+    const { ref: githubHeaderRef, isVisible: isGithubHeaderVisible } = useScrollAnimation({ threshold: 0.3 });
+    const { ref: contactHeaderRef, isVisible: isContactHeaderVisible } = useScrollAnimation({ threshold: 0.3 });
 
     // Track mouse for dynamic gradient
     useEffect(() => {
@@ -523,23 +525,23 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
             <section id="home" className="relative pt-32 pb-20 px-6 min-h-screen flex items-center">
                 <div className="max-w-7xl mx-auto w-full">
                     <div className="grid md:grid-cols-2 gap-12 items-center">
-                        <div ref={heroAnimation.ref}>
-                            <h1 className={`text-5xl md:text-7xl font-bold mb-6 leading-tight scroll-animate ${heroAnimation.isVisible ? 'animate-slide-in-left' : ''
+                        <div ref={heroRef}>
+                            <h1 className={`text-5xl md:text-7xl font-bold mb-6 leading-tight scroll-animate ${isHeroVisible ? 'animate-slide-in-left' : ''
                                 }`}>
-                                <span className={`block scroll-animate ${heroAnimation.isVisible ? 'animate-fade-in-scale' : ''
+                                <span className={`block scroll-animate ${isHeroVisible ? 'animate-fade-in-scale' : ''
                                     }`} style={{ animationDelay: '0.2s' }}>
                                     {hero.greeting}
                                 </span>
-                                <span className={`block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_200%] scroll-animate ${heroAnimation.isVisible ? 'animate-slide-in-right' : ''
+                                <span className={`block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_200%] scroll-animate ${isHeroVisible ? 'animate-slide-in-right' : ''
                                     }`} style={{ animationDelay: '0.4s' }}>
                                     {hero.heading}
                                 </span>
                             </h1>
-                            <p className={`text-xl mb-8 leading-relaxed whitespace-pre-wrap scroll-animate ${heroAnimation.isVisible ? 'animate-fade-in-scale' : ''
+                            <p className={`text-xl mb-8 leading-relaxed whitespace-pre-wrap scroll-animate ${isHeroVisible ? 'animate-fade-in-scale' : ''
                                 }`} style={{ animationDelay: '0.6s' }}>
                                 {hero.description}
                             </p>
-                            <div className={`flex flex-col sm:flex-row gap-4 scroll-animate ${heroAnimation.isVisible ? 'animate-slide-up-bounce' : ''
+                            <div className={`flex flex-col sm:flex-row gap-4 scroll-animate ${isHeroVisible ? 'animate-slide-up-bounce' : ''
                                 }`} style={{ animationDelay: '0.8s' }}>
                                 <button
                                     onClick={() => scrollToSection('projects')}
@@ -632,10 +634,10 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
             {/* Projects Section */}
             <section id="projects" className="py-20 px-6">
                 <div className="max-w-7xl mx-auto">
-                    <div ref={projectsHeaderAnimation.ref}>
-                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${projectsHeaderAnimation.isVisible ? 'animate-fade-in-scale' : ''
+                    <div ref={projectsHeaderRef}>
+                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${isProjectsHeaderVisible ? 'animate-fade-in-scale' : ''
                             }`}>Featured Projects</h2>
-                        <p className={` text-center mb-12 scroll-animate ${projectsHeaderAnimation.isVisible ? 'animate-slide-in-left' : ''
+                        <p className={` text-center mb-12 scroll-animate ${isProjectsHeaderVisible ? 'animate-slide-in-left' : ''
                             }`} style={{ animationDelay: '0.2s' }}>A selection of my recent work</p>
                     </div>
 
@@ -746,7 +748,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                             className="absolute top-4 right-4 z-10 p-2 bg-slate-900/90 dark:bg-slate-900/90 light:bg-gray-200/90 hover:bg-slate-900 dark:hover:bg-slate-900 light:hover:bg-gray-300 rounded-full transition-colors"
                             aria-label="Close modal"
                         >
-                            <X className="w-6 h-6" />
+                            <X className="w-6 h-6 text-white" />
                         </button>
 
                         {/* Video player (if exists) */}
@@ -789,7 +791,7 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                 {selectedProject.category}
                             </span>
                             <h2 className="text-3xl font-bold mt-2 mb-4 dark:text-white light:text-gray-900">{selectedProject.title}</h2>
-                            <p className="text-gray-300 dark:text-gray-300 light:text-gray-600 text-lg leading-relaxed mb-6 whitespace-pre-wrap">
+                            <p className="text-white text-lg leading-relaxed mb-6 whitespace-pre-wrap">
                                 {selectedProject.description}
                             </p>
                             <div>
@@ -811,11 +813,23 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
 
             {/* View All Projects Modal */}
             {showAllProjects && (() => {
+                // Get  unique categories
+                const categories = ['all', ...Array.from(new Set(projects.map(p => p.category)))];
+
+                // Filter and sort projects
+                let filteredProjects = filterCategory === 'all'
+                    ? projects
+                    : projects.filter(p => p.category === filterCategory);
+
+                if (sortOrder === 'recent') {
+                    filteredProjects = [...filteredProjects].reverse(); // Assuming newer items are at the end
+                }
+
                 const itemsPerPage = 4;
-                const totalPages = Math.ceil(projects.length / itemsPerPage);
+                const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
-                const currentProjects = projects.slice(startIndex, endIndex);
+                const currentProjects = filteredProjects.slice(startIndex, endIndex);
 
                 return (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -825,27 +839,69 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                             onClick={() => {
                                 setShowAllProjects(false);
                                 setCurrentPage(1);
+                                setFilterCategory('all');
+                                setSortOrder('default');
                             }}
                         />
 
                         {/* Modal content */}
                         <div className="relative bg-slate-900 dark:bg-slate-900 light:bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] flex flex-col border border-slate-700 dark:border-slate-700 light:border-gray-300 shadow-2xl animate-scale-in">
                             {/* Header */}
-                            <div className="flex-shrink-0 bg-slate-900 dark:bg-slate-900 light:bg-white border-b border-slate-700 dark:border-slate-700 light:border-gray-300 px-6 py-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                                        All Projects <span className="text-sm text-gray-400">({projects.length} total)</span>
+                            <div className="flex-shrink-0 bg-slate-900 dark:bg-slate-900 light:bg-white border-b border-slate-700 dark:border-slate-700 light:border-gray-300 px-3 sm:px-6 py-4">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                                        All Projects <span className="text-xs sm:text-sm text-white">({filteredProjects.length} total)</span>
                                     </h2>
                                     <button
                                         onClick={() => {
                                             setShowAllProjects(false);
                                             setCurrentPage(1);
+                                            setFilterCategory('all');
+                                            setSortOrder('default');
                                         }}
-                                        className="p-2 bg-slate-800/90 dark:bg-slate-800/90 light:bg-gray-200/90 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-gray-300 rounded-full transition-colors"
+                                        className="absolute top-3 right-3 sm:relative sm:top-0 sm:right-0 p-2 text-white hover:bg-slate-800 rounded-full transition-colors"
                                         aria-label="Close modal"
                                     >
-                                        <X className="w-6 h-6" />
+                                        <X className="w-5 h-5 sm:w-6 sm:h-6" />
                                     </button>
+                                </div>
+
+                                {/* Filters */}
+                                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                    {/* Category Filter */}
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
+                                        <select
+                                            value={filterCategory}
+                                            onChange={(e) => {
+                                                setFilterCategory(e.target.value);
+                                                setCurrentPage(1); // Reset to page 1 when filtering
+                                            }}
+                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                        >
+                                            {categories.map(cat => (
+                                                <option key={cat} value={cat}>
+                                                    {cat === 'all' ? 'All Categories' : cat.toUpperCase()}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Sort Order */}
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-medium text-gray-400 mb-1">Sort By</label>
+                                        <select
+                                            value={sortOrder}
+                                            onChange={(e) => {
+                                                setSortOrder(e.target.value as 'recent' | 'default');
+                                                setCurrentPage(1); // Reset to page 1 when sorting
+                                            }}
+                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                        >
+                                            <option value="default">Default Order</option>
+                                            <option value="recent">Recently Added</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
@@ -873,10 +929,10 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                                                     <span className="inline-block px-2 py-1 bg-indigo-600/20 text-indigo-400 rounded text-xs uppercase font-semibold mb-2">
                                                         {project.category}
                                                     </span>
-                                                    <h3 className="text-lg font-bold mb-2 group-hover:text-indigo-400 transition-colors line-clamp-1">
+                                                    <h3 className="text-lg font-bold mb-2 text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
                                                         {project.title}
                                                     </h3>
-                                                    <p className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 line-clamp-2 mb-3">
+                                                    <p className="text-sm text-white line-clamp-2 mb-3">
                                                         {project.description}
                                                     </p>
                                                     <div className="flex flex-wrap gap-1">
@@ -952,75 +1008,77 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
 
 
             {/* Image Viewer Modal */}
-            {showImageViewer && selectedImage && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
-                    {/* Backdrop */}
-                    <div
-                        className="absolute inset-0 bg-black/95 backdrop-blur-sm"
-                        onClick={() => {
-                            setShowImageViewer(false);
-                            setSelectedImage(null);
-                        }}
-                    />
-
-                    {/* Modal content */}
-                    <div className="relative w-full h-full flex items-center justify-center">
-                        {/* Close button */}
-                        <button
+            {
+                showImageViewer && selectedImage && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
+                        {/* Backdrop */}
+                        <div
+                            className="absolute inset-0 bg-black/95 backdrop-blur-sm"
                             onClick={() => {
                                 setShowImageViewer(false);
                                 setSelectedImage(null);
                             }}
-                            className="absolute top-4 right-4 z-10 p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-colors group"
-                            aria-label="Close image viewer"
-                        >
-                            <X className="w-7 h-7 group-hover:rotate-90 transition-transform" />
-                        </button>
+                        />
 
-                        {/* Download button */}
-                        <a
-                            href={selectedImage}
-                            download
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="absolute top-4 right-20 z-10 p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-colors group"
-                            aria-label="Download image"
-                        >
-                            <svg className="w-7 h-7 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                        </a>
+                        {/* Modal content */}
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            {/* Close button */}
+                            <button
+                                onClick={() => {
+                                    setShowImageViewer(false);
+                                    setSelectedImage(null);
+                                }}
+                                className="absolute top-4 right-4 z-10 p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-colors group"
+                                aria-label="Close image viewer"
+                            >
+                                <X className="w-7 h-7 group-hover:rotate-90 transition-transform" />
+                            </button>
 
-                        {/* Image */}
-                        <div className="relative max-w-7xl max-h-[90vh] animate-scale-in">
-                            <Image
-                                src={selectedImage}
-                                alt="Full size preview"
-                                width={1920}
-                                height={1080}
-                                className="object-contain max-h-[90vh] rounded-lg shadow-2xl"
-                                unoptimized={selectedImage.endsWith('.gif')}
-                            />
-                        </div>
+                            {/* Download button */}
+                            <a
+                                href={selectedImage}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute top-4 right-20 z-10 p-3 bg-slate-900/90 hover:bg-slate-900 rounded-full transition-colors group"
+                                aria-label="Download image"
+                            >
+                                <svg className="w-7 h-7 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </a>
 
-                        {/* Instructions */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900/90 rounded-full text-sm text-gray-300">
-                            Click outside to close
+                            {/* Image */}
+                            <div className="relative max-w-7xl max-h-[90vh] animate-scale-in">
+                                <Image
+                                    src={selectedImage}
+                                    alt="Full size preview"
+                                    width={1920}
+                                    height={1080}
+                                    className="object-contain max-h-[90vh] rounded-lg shadow-2xl"
+                                    unoptimized={selectedImage.endsWith('.gif')}
+                                />
+                            </div>
+
+                            {/* Instructions */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900/90 rounded-full text-sm text-gray-300">
+                                Click outside to close
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
 
 
             {/* Skills Section */}
-            <section id="skills" className="py-20 px-6">
+            <section id="skills" className="py-20 px-6 bg-slate-800/50 dark:bg-slate-800/50 light:bg-gray-50">
                 <div className="max-w-7xl mx-auto">
-                    <div ref={skillsHeaderAnimation.ref}>
-                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${skillsHeaderAnimation.isVisible ? 'animate-fade-in-scale' : ''
-                            }`}>Skills & Expertise</h2>
-                        <p className={` text-center mb-12 scroll-animate ${skillsHeaderAnimation.isVisible ? 'animate-slide-in-right' : ''
-                            }`} style={{ animationDelay: '0.2s' }}>Tools and technologies I work with</p>
+                    <div ref={skillsHeaderRef}>
+                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${isSkillsHeaderVisible ? 'animate-fade-in-scale' : ''
+                            }`}>Technical Skills</h2>
+                        <p className={` text-center mb-12 scroll-animate ${isSkillsHeaderVisible ? 'animate-slide-in-right' : ''
+                            }`} style={{ animationDelay: '0.2s' }}>The tools and technologies I use to bring ideas to life</p>
                     </div>
 
                     <SkillsGrid skills={skills} />
@@ -1030,11 +1088,11 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
             {/* GitHub Section */}
             <section id="github" className="py-20 px-6">
                 <div className="max-w-7xl mx-auto">
-                    <div ref={githubHeaderAnimation.ref}>
-                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${githubHeaderAnimation.isVisible ? 'animate-fade-in-scale' : ''
-                            }`}>Open Source</h2>
-                        <p className={` text-center mb-8 scroll-animate ${githubHeaderAnimation.isVisible ? 'animate-slide-in-left' : ''
-                            }`} style={{ animationDelay: '0.2s' }}>Check out my work on GitHub</p>
+                    <div ref={githubHeaderRef}>
+                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${isGithubHeaderVisible ? 'animate-fade-in-scale' : ''
+                            }`}>GitHub Activity</h2>
+                        <p className={` text-center mb-12 scroll-animate ${isGithubHeaderVisible ? 'animate-slide-in-left' : ''
+                            }`} style={{ animationDelay: '0.2s' }}>Recent contributions and repositories</p>
                     </div>
 
                     <div className="flex justify-center mb-12">
@@ -1090,10 +1148,10 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
             {/* Contact Section */}
             <section id="contact" className="py-20 px-6">
                 <div className="max-w-4xl mx-auto">
-                    <div ref={contactHeaderAnimation.ref}>
-                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${contactHeaderAnimation.isVisible ? 'animate-fade-in-scale' : ''
+                    <div ref={contactHeaderRef}>
+                        <h2 className={`text-4xl md:text-5xl font-bold mb-4 text-center scroll-animate ${isContactHeaderVisible ? 'animate-fade-in-scale' : ''
                             }`}>Let&apos;s Work Together</h2>
-                        <p className={` text-center text-xl mb-12 scroll-animate ${contactHeaderAnimation.isVisible ? 'animate-slide-in-right' : ''
+                        <p className={` text-center text-xl mb-12 scroll-animate ${isContactHeaderVisible ? 'animate-slide-in-right' : ''
                             }`} style={{ animationDelay: '0.2s' }}>
                             Have a project in mind? Let&apos;s create something amazing together.
                         </p>
@@ -1218,6 +1276,6 @@ export default function PortfolioClient({ hero, projects, skills }: PortfolioCli
                     <p>© {new Date().getFullYear()} Ven.Dev. Built with Next.js & React.</p>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 }
