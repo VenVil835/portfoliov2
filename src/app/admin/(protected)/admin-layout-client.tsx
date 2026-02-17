@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, LayoutDashboard, MessageSquare, Briefcase, Award, Settings, LogOut, Menu, X } from 'lucide-react';
-import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { handleSignOut } from './actions';
 
 interface AdminLayoutClientProps {
     children: React.ReactNode;
@@ -70,7 +70,7 @@ export default function AdminLayoutClient({ children, userName, userEmail }: Adm
                 `}
             >
                 <div className="p-6 border-b border-slate-800">
-                    <Link href="" className="flex items-center gap-2 group">
+                    <Link href="/" className="flex items-center gap-2 group">
                         <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
                             <LayoutDashboard size={18} />
                         </div>
@@ -102,13 +102,15 @@ export default function AdminLayoutClient({ children, userName, userEmail }: Adm
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => signOut()}
-                        className="flex items-center gap-3 w-full px-2 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                        <LogOut size={18} />
-                        Sign Out
-                    </button>
+                    <form action={handleSignOut}>
+                        <button
+                            type="submit"
+                            className="flex items-center gap-3 w-full px-2 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                            <LogOut size={18} />
+                            Sign Out
+                        </button>
+                    </form>
                 </div>
             </aside>
 
