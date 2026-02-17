@@ -1,0 +1,13 @@
+{
+    "functions": {
+        "src/app/api/upload/route.ts": {
+            "maxDuration": 60,
+            "memory": 1024
+        }
+    },
+    "api": {
+        "bodyParser": {
+            "sizeLimit": "100mb"
+        }
+    }
+}
